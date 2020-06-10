@@ -2,7 +2,8 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser")
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
@@ -17,11 +18,29 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-// trigger a listen action on a specific port and do a callback
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`);
+// if we have a get request asking for the path of '/', do the callback
+app.get("/", (req, res) => {
+  res.send("Hello!");
 });
 
+//user login
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username);
+  res.redirect("/urls")
+})
+
+app.get("/urls", (req, res) => {
+  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  res.render("urls_index", templateVars)
+})
+
+//user logout
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect("/urls");
+})
+
+//URL creater
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
@@ -29,15 +48,16 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
- 
+  
   urlDatabase[shortURL] = longURL;
   res.redirect(`urls/${shortURL}`);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL
+ 
+  const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL];
-  let templateVars = { shortURL, longURL };
+  let templateVars = { shortURL, longURL, username: req.cookies["username"]};
   res.render("urls_show", templateVars);
 });
 
@@ -47,11 +67,7 @@ app.get("/u/:shortURL", (req, res) => {
   
   res.redirect(longURL);
 });
-// In the event of a get 
-app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
-  res.render("urls_index", templateVars);
-});
+
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
@@ -60,17 +76,20 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-app.post("/urls/:shortURL", (req, res) => {
+app.post("/urls/:shortURL", (req, res) => { 
   const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
   urlDatabase[shortURL] = longURL;
-
+  
   res.redirect("/urls");
 })
 
 
 
-
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}`);
+});
+ 
 
 app.use((err,req, res, next) => {
   console.log(err.message);
@@ -78,10 +97,6 @@ app.use((err,req, res, next) => {
 });
 
 
-//if we have a get request asking for the path of '/', do the callback
-// app.get("/", (req, res) => {
-//   res.send("Hello!");
-// });
 
 // app.get("/hello", (req, res) => {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n")
