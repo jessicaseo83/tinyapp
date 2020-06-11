@@ -3,8 +3,14 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const userFinderByEmail = require("./helpers");
+const generateRandomString = require("./helpers");
+const userFinder = require("./helpers");
+const newUser = require("./helpers");
+const urlsForUser = require("./helpers");
+
 app.use(cookieSession({
   name: 'session',
   keys: ['pihilekqj-eiigh3009i','awnblre889-ewo3i20e']
@@ -18,11 +24,6 @@ const urlDatabase = {
   "9sm5xK": { longURL: "http://www.google.com", userID: "ojw3xd"}
 };
 
-// user id generater
-const generateRandomString = () => {
-  return Math.random().toString(36).slice(2, 8);
-}
-
 // user database
 const users = {
   "userRandomID": {
@@ -35,47 +36,6 @@ const users = {
     email: "user2@example.com",
     password: "dishwasher-funk"
   }
-}
-// newuser
-const newUser = (email, password) => {
-  const userUid = generateRandomString();
-  const newUserObj = {
-    id: userUid,
-    email,
-    password
-  }
-  users[userUid] = newUserObj;
-  return userUid;
-}
-// find user by email
-const userFinderByEmail = (email) => {
-  for (let userUid in users) {
-    if (users[userUid].email === email){
-      return users[userUid];
-    }
-  }
-  return false;
-}
-// find user by given email and password and check if they match
-const userFinder = (email, password) => {
-  const user = userFinderByEmail(email);
-
-  if (user && bcrypt.compareSync(password, user.password)) {
-    return user;
-  } else {
-    return false;
-  }
-};
-// user's urls
-const urlsForUser = (id) => {
-  const userUrl = {};
-  const database = urlDatabase;
-  for (let url in database) {
-    if(database[url].userID === id) {
-      userUrl[url] = database[url].longURL;
-    }
-  }
-  return userUrl;
 }
 
 // if we have a get request asking for the path of '/', do the callback
@@ -95,7 +55,7 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, saltRounds);
-  const userFound = userFinderByEmail(email);
+  const userFound = userFinderByEmail(email, users);
 
   if (!email || !password) {
     res.status(400).send("Please provide a valid email address/password"); 
@@ -142,12 +102,12 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = userFinder(email, password);
+  const user = userFinder(email, password, users);
 
   if(user) {
     req.session['user_id'] = user.id;
     res.redirect("/urls");
-    b
+    
   } else {
     res.status(403).send("Your email/password is incorrect or not registered");
   }
