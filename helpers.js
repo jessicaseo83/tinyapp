@@ -1,3 +1,7 @@
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+
+
 // user id generater
 const generateRandomString = () => {
   return Math.random().toString(36).slice(2, 8);
@@ -25,21 +29,20 @@ const userFinder = (email, password, database) => {
 };
 
 // newuser
-const newUser = (email, password) => {
+const newUser = (email, password, database) => {
   const userUid = generateRandomString();
   const newUserObj = {
     id: userUid,
     email,
-    password
+    password: bcrypt.hashSync(password, saltRounds)
   }
-  users[userUid] = newUserObj;
+  database[userUid] = newUserObj;
   return userUid;
 }
 
 // user's urls
-const urlsForUser = (id) => {
+const urlsForUser = (id, database) => {
   const userUrl = {};
-  const database = urlDatabase;
   for (let url in database) {
     if(database[url].userID === id) {
       userUrl[url] = database[url].longURL;
@@ -56,3 +59,4 @@ module.exports = {
   newUser,
   urlsForUser
 }
+
