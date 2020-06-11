@@ -3,6 +3,8 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
@@ -37,7 +39,7 @@ const newUser = (email, password) => {
   const newUserObj = {
     id: userUid,
     email,
-    password,
+    password
   }
   users[userUid] = newUserObj;
   return userUid;
@@ -55,7 +57,7 @@ const userFinderByEmail = (email) => {
 const userFinder = (email, password) => {
   const user = userFinderByEmail(email);
 
-  if (user && user.password === password) {
+  if (user && bcrypt.compareSync(password, user.password)) {
     return user;
   } else {
     return false;
@@ -89,6 +91,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, saltRounds);
   const userFound = userFinderByEmail(email);
 
   if (!email || !password) {
@@ -96,11 +99,11 @@ app.post("/register", (req, res) => {
   } 
 
   if(!userFound){
-    const userId = newUser(email, password);
+    const userId = newUser(email, hashedPassword);
 
     res.cookie("user_id", userId)
-    res.cookie("email", req.body.email);
-    res.cookie("password", req.body.password);
+    // res.cookie("email", req.body.email);
+    // res.cookie("password", req.body.password);
     res.redirect("/urls")
 
   } else {
@@ -109,35 +112,6 @@ app.post("/register", (req, res) => {
 
 
 });
-
-//user login page
-app.get("/login", (req, res) => {
-  const templateVars = { user: null};
-  res.render("urls_login", templateVars);
-})
-
-app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const user = userFinder(email, password);
-
-  if(user) {
-    res.cookie('user_id', user.id);
-    res.redirect("/urls");
-
-  } else {
-    res.status(403).send("Your email/password is incorrect or not registered");
-  }
- 
-})
-
-//user logout
-app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
-  res.clearCookie("email");
-  res.clearCookie("password");
-  res.redirect("/urls");
-})
 
 // show user's urls 
 app.get("/urls", (req, res) => {
@@ -155,6 +129,37 @@ app.get("/urls", (req, res) => {
     
    }
 })
+
+//user login page
+app.get("/login", (req, res) => {
+  const templateVars = { user: null};
+  res.render("urls_login", templateVars);
+})
+
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = userFinder(email, password);
+
+  if(!user) {
+    res.status(403).send("Your email/password is incorrect or not registered");
+b
+  } else {
+    res.cookie('user_id', user.id);
+    res.redirect("/urls");
+  }
+ 
+})
+
+//user logout
+app.post("/logout", (req, res) => {
+  res.clearCookie("user_id");
+  // res.clearCookie("email");
+  // res.clearCookie("password");
+  res.redirect("/urls");
+})
+
+
 
 
 
@@ -242,6 +247,6 @@ app.use((err,req, res, next) => {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n")
 // });
 
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
+app.get("/urls.json", (req, res) => {
+  res.json(users);
+});
