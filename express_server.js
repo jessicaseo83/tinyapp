@@ -5,18 +5,19 @@ const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const userFinderByEmail = require("./helpers");
-const generateRandomString = require("./helpers");
-const userFinder = require("./helpers");
-const newUser = require("./helpers");
-const urlsForUser = require("./helpers");
+const generateRandomString = require("./helpers").generateRandomString;
+const userFinderByEmail = require("./helpers").userFinderByEmail;
+const userFinder = require("./helpers").userFinder;
+const newUser = require("./helpers").newUser;
+const urlsForUser = require("./helpers").urlsForUser
+  
+
+
 
 app.use(cookieSession({
   name: 'session',
   keys: ['pihilekqj-eiigh3009i','awnblre889-ewo3i20e']
 }));
-app.use(bodyParser.urlencoded({extended: true}));
-app.set("view engine", "ejs");
 
 const urlDatabase = {
   // shortURL:  {longURL, userID}
@@ -38,6 +39,13 @@ const users = {
   }
 }
 
+
+
+app.use(bodyParser.urlencoded({extended: true}));
+app.set("view engine", "ejs");
+
+
+
 // if we have a get request asking for the path of '/', do the callback
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -45,24 +53,23 @@ app.get("/", (req, res) => {
 
 //register
 app.get("/register", (req, res) => {
-  const userID = req.session["user_id"]
-  const currentUser = users[userID];
-  let templateVars = { urls: urlDatabase, user: currentUser };
+  // const userID = req.session["user_id"]
+  // const loginUser = users[userID];
+  let templateVars = { urls: urlDatabase, user : null};
   res.render("urls_register", templateVars);
 })
 
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const hashedPassword = bcrypt.hashSync(password, saltRounds);
   const userFound = userFinderByEmail(email, users);
 
   if (!email || !password) {
     res.status(400).send("Please provide a valid email address/password"); 
   } 
-
+ 
   if(!userFound){
-    const userId = newUser(email, hashedPassword);
+    const userId = newUser(email, password, users);
 
     req.session["user_id"] = userId;
     // res.cookie("email", req.body.email);
@@ -77,25 +84,10 @@ app.post("/register", (req, res) => {
 });
 
 // show user's urls 
-app.get("/urls", (req, res) => {
-  const userID = req.session["user_id"]
-  const currentUser = users[userID];
-  const userUrl = urlsForUser(userID)
-  
-
-  if(currentUser){
-    let templateVars = { urls: userUrl, user: currentUser  };
-    res.render("urls_index", templateVars);
-   } else {
-    let templateVars = { urls: userUrl, user: null}
-    res.render("urls_ask", templateVars);
-    
-   }
-})
 
 //user login page
 app.get("/login", (req, res) => {
-  const templateVars = { user: null};
+  const templateVars = { user: null };
   res.render("urls_login", templateVars);
 })
 
@@ -103,15 +95,15 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const user = userFinder(email, password, users);
-
+  
   if(user) {
-    req.session['user_id'] = user.id;
+    req.session['user_id'] = user.id
     res.redirect("/urls");
     
   } else {
     res.status(403).send("Your email/password is incorrect or not registered");
   }
- 
+  
 })
 
 //user logout
@@ -123,16 +115,35 @@ app.post("/logout", (req, res) => {
 })
 
 
+app.get("/urls", (req, res) => {
+  const userID = req.session["user_id"]
+  const loginUser = users[userID];
+ 
+  const userUrl = urlsForUser(userID, urlDatabase)
+  let templateVars = { urls: userUrl, user: loginUser  }
+  
+
+  if(loginUser){;
+    res.render("urls_index", templateVars);
+    
+   } else {
+    let templateVars = { urls: userUrl, user: null}
+    res.render("urls_ask", templateVars);
+    
+   }
+  
+})
+
 
 
 
 app.get("/urls/new", (req, res) => {
   const userID = req.session["user_id"]
-  const currentUser = users[userID];
+  const loginUser = users[userID];
   const userUrl = urlsForUser(userID)
 
-  if(currentUser){
-    let templateVars = { urls: userUrl, user: currentUser  };
+  if(loginUser){
+    let templateVars = { urls: userUrl, user: loginUser };
     res.render("urls_new", templateVars);
    } else {
     let templateVars = { urls: userUrl, user: null}
