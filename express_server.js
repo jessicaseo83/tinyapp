@@ -63,7 +63,9 @@ app.post("/register", (req, res) => {
   const userFound = userFinderByEmail(email, users);
 
   if (!email || !password) {
-    res.status(400).send("Please provide a valid email address/password");
+    res.status(400);
+    res.render("urls_registerfailed", templateVars);
+
   }
  
   if (!userFound) {
@@ -75,7 +77,9 @@ app.post("/register", (req, res) => {
     res.redirect("/urls");
 
   } else {
-    res.status(400).send("You are already registered!");
+    const templateVars = { user: null};
+    res.status(400);
+    res.render("urls_registerfailed", templateVars);
   }
 
 
@@ -99,14 +103,17 @@ app.post("/login", (req, res) => {
     res.redirect("/urls");
     
   } else {
-    res.status(403).send("Your email/password is incorrect or not registered");
+    const templateVars = { user: null};
+    res.status(403)
+    res.render("urls_loginfailed", templateVars);
+   
   }
   
 });
 
 //user logout
 app.post("/logout", (req, res) => {
-  req.session["user_id"] = null;
+  req.session = null;
   // res.clearCookie("email");
   // res.clearCookie("password");
   res.redirect("/urls");
@@ -145,7 +152,9 @@ app.get("/urls/new", (req, res) => {
     res.render("urls_new", templateVars);
 
   } else {
-    let templateVars = { urls: userUrl, user: null};
+
+    let templateVars = {user: null};
+    res.status(403);
     res.render("urls_ask", templateVars);
     
   }
@@ -160,7 +169,7 @@ app.post("/urls", (req, res) => {
 
   const userID = req.session["user_id"];
   urlDatabase[shortURL] = {longURL, userID};
-  console.log(urlDatabase);
+  
 });
 
 
@@ -169,8 +178,19 @@ app.get("/urls/:shortURL", (req, res) => {
   const longURL = urlDatabase[shortURL].longURL;
   const userID = req.session["user_id"];
   const currentUser = users[userID];
+
   let templateVars = { shortURL, longURL, user: currentUser };
-  res.render("urls_show", templateVars);
+
+  if(!currentUser){
+    let templateVars = {user: null};
+    res.status(403);
+    res.render("urls_ask", templateVars);
+  
+
+  } else {
+    res.render("urls_show", templateVars);
+  }
+
 });
 
 
@@ -189,7 +209,9 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[shortURL];
     res.redirect("/urls");
   } else {
-    res.send("Permission Denied");
+    let templateVars = {user: null};
+    res.status(403);
+    res.render("urls_permission", templateVars)
   }
  
 });
