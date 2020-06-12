@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+  <title>TinyApp</title>
+</head>
+<body>
+  <%- include('./partials/_header') %>
+  <form method='POST' action='/login'>
+    <div class="form-group mb-2" style="margin-top: 30px; margin-left: 30px">
+      <div class="alert alert-danger" role="alert" style="width: 500px;">
+        Please check email address and password. If you haven't registered yet, please <a href="/register" class="alert-link"> Register</a>. 
+      </div>
+      <h2>Log In</h2>
+      <label style= "margin-top: 20px;">Email address</label>
+      <input type="email" class="form-control" name="email"  placeholder="Enter email" style="width: 500px">
+    </div>
+    <div class="form-group mb-2" style="margin-left: 30px">
+      <label>Password</label>
+      <input type="password" class="form-control" name="password" placeholder="Password" style="width: 500px">
+    </div>
+    <button type="submit" class="btn btn-success" style=" margin-top: 10px; margin-left: 30px">Log In</button>
+  </form>
+  
+</body>
+</html>
