@@ -5,17 +5,17 @@ const saltRounds = 10;
 // user id generater
 const generateRandomString = () => {
   return Math.random().toString(36).slice(2, 8);
-}
+};
 
 // find user by email
 const userFinderByEmail = (email, database) => {
   for (let userUid in database) {
-    if (database[userUid].email === email){
+    if (database[userUid].email === email) {
       return database[userUid];
     }
   }
   return false;
-}
+};
 
 // find user by given email and password and check if they match
 const userFinder = (email, password, database) => {
@@ -35,28 +35,28 @@ const newUser = (email, password, database) => {
     id: userUid,
     email,
     password: bcrypt.hashSync(password, saltRounds)
-  }
+  };
   database[userUid] = newUserObj;
   return userUid;
-}
+};
 
 // user's urls
 const urlsForUser = (id, database) => {
   const userUrl = {};
   for (let url in database) {
-    if(database[url].userID === id) {
+    if (database[url].userID === id) {
       userUrl[url] = database[url].longURL;
     }
   }
   return userUrl;
-}
+};
 
 
-module.exports = { 
+module.exports = {
   generateRandomString,
   userFinderByEmail,
   userFinder,
   newUser,
   urlsForUser
-}
+};
 
