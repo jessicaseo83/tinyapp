@@ -53,7 +53,7 @@ app.get("/", (req, res) => {
 app.get("/register", (req, res) => {
   // const userID = req.session["user_id"]
   // const loginUser = users[userID];
-  let templateVars = { urls: urlDatabase, user : null};
+  const templateVars = { urls: urlDatabase, user : null};
   res.render("urls_register", templateVars);
 });
 
@@ -125,7 +125,7 @@ app.get("/urls", (req, res) => {
   const loginUser = users[userID];
  
   const userUrl = urlsForUser(userID, urlDatabase);
-  let templateVars = { urls: userUrl, user: loginUser  };
+  const templateVars = { urls: userUrl, user: loginUser  };
   
 
   if (loginUser) {
@@ -133,7 +133,7 @@ app.get("/urls", (req, res) => {
     res.render("urls_index", templateVars);
     
   } else {
-    let templateVars = { urls: userUrl, user: null};
+    const templateVars = { urls: userUrl, user: null};
     res.render("urls_ask", templateVars);
     
   }
@@ -148,12 +148,12 @@ app.get("/urls/new", (req, res) => {
   const userUrl = urlsForUser(userID);
 
   if (loginUser) {
-    let templateVars = { urls: userUrl, user: loginUser };
+    const templateVars = { urls: userUrl, user: loginUser };
     res.render("urls_new", templateVars);
 
   } else {
 
-    let templateVars = {user: null};
+    const templateVars = {user: null};
     res.status(403);
     res.render("urls_ask", templateVars);
     
@@ -179,10 +179,10 @@ app.get("/urls/:shortURL", (req, res) => {
   const userID = req.session["user_id"];
   const currentUser = users[userID];
 
-  let templateVars = { shortURL, longURL, user: currentUser };
+  const templateVars = { shortURL, longURL, user: currentUser };
 
   if(!currentUser){
-    let templateVars = {user: null};
+    const templateVars = {user: null};
     res.status(403);
     res.render("urls_ask", templateVars);
   
@@ -209,7 +209,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[shortURL];
     res.redirect("/urls");
   } else {
-    let templateVars = {user: null};
+    const templateVars = {user: null};
     res.status(403);
     res.render("urls_permission", templateVars)
   }
