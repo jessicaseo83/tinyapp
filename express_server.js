@@ -46,7 +46,7 @@ app.set("view engine", "ejs");
 
 // if we have a get request asking for the path of '/', do the callback
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/urls");
 });
 
 //register
